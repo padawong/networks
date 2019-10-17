@@ -1,0 +1,29 @@
+> nslookup www.erincondren.com
+Q1.1) Server: 138.23.201.101
+        (address of the website's Domain Name Server)
+      Address: 138.23.201.101#53
+        (Port 53: standard port # DNS use to accept queries)
+Q1.2) NO CANONICAL NAME
+Q1.3) Address: 35.161.47.32
+        (name server address)
+
+
+(Info from https://www.maketecheasier.com/advanced-guide-nslookup/)
+
+> nslookup -query=MX erincondren.com
+> nslookup -query=NS erincondren.com
+Q1.4) MX appears to provide information on the mail server used by the website
+      NS specifies DNS name server for the named zone
+
+> nslookup -query=SOA erincondren.com
+Q1.5) I'M NOT SURE WHAT THESE MEAN AT ALL
+        origin = ns-1494.awsdns-58.org
+        mail addr = awsdns-hostmaster.amazon.com
+        serial = 1
+        refresh = 7200
+        retry = 900
+        expire = 1209600
+        minimum = 86400
+
+nslookup 8.8.8.8
+Q1.6) name = dns.google.
