@@ -18,14 +18,21 @@ Q1.4) MX appears to provide information on the mail server used by the website
       NS specifies DNS name server for the named zone
 
 > nslookup -query=SOA erincondren.com
-Q1.5) I'M NOT SURE WHAT THESE MEAN AT ALL
+Q1.5) 
         origin = ns-1494.awsdns-58.org
+            name of primary master name server
         mail addr = awsdns-hostmaster.amazon.com
+            email addr. of person responsible for this zone
         serial = 1
+            serial number for the zone; if changed, will result in a zone transfer
         refresh = 7200
+            # of seconds until secondary name servers query master for SOA record to detect zone changes
         retry = 900
+            # of seconds after which secondary name servers should retry to request the serial # from master if no response
         expire = 1209600
+            # of seconds after which secondary name servers should stop answer request for this zone if master does not respond
         minimum = 86400
+            Time to live for negative caching
 
 nslookup 8.8.8.8
 Q1.6) name = dns.google.
@@ -48,10 +55,6 @@ PART 2:
      0xd060: frames 35, 36
 
 12f. 4: frames 13, 14, 33, 34
-
-12g. I don't understand this question
-
-12h. see above
 
 ========================================================================
 
