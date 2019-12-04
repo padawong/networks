@@ -3,6 +3,9 @@ import sys
 from thread import *
 
 userpw = {'user1': 'pw1', 'user2': 'pw2', 'user3': 'pw3'}
+# Key is user, value is users subscribed to
+subs = {'user1': [], 'user2': [], 'user3': []}
+tweets = {'user1': [], 'user2': [], 'user3': []}
 
 HOST = ''   # Symbolic name meaning all available interfaces
 # NOTE: Cannot have 2 sockets bound to the same port
@@ -46,12 +49,12 @@ def clientthread(conn):
     conn.send('\nLogin successful. Welcome back!\n')
 
     unread = 0
-    msg = 'You have ' + str(unread) + ' unread messages\n'
+    msg = '\nYou have ' + str(unread) + ' unread messages'
     conn.sendall(msg)
 
     #infinite loop so that function do not terminate and thread do not end.
     while True:
-        msg = 'Please select an option: \n'
+        msg = '\n\nPlease select an option: \n'
         msg += '1) See offline messages\n'
         msg += '2) Edit subscriptions\n'
         msg += '3) Post a message\n'
@@ -60,25 +63,103 @@ def clientthread(conn):
         conn.sendall(msg)
 
         data = conn.recv(1024)
+        while data != '1' and data != '2' and data != '3' and data != '4' and data != '5':
+            conn.sendall('\nPlease enter a valid selection')
+            data = conn.recv(1024)
 
+        # See offline messages
         if data == '1':
-            # See offline messages
             msg = "See offline messages"
 
+        # Edit subscriptions
         elif data == '2': 
-            # Edit subscriptions
-            msg = "edit sub"
+            msg = "\n\nEdit Subscriptions Menu\nPlease select an option:\n"
+            msg += '1) Add a subscription\n'
+            msg += '2) Drop a subscription\n'
+            msg += '3) Return to main menu\n'
+            msg += '4) Logout\n'
+            conn.sendall(msg)
+            sel = conn.recv(1024)
+            while sel != '1' and sel != '2' and sel != '3':
+                conn.sendall('\nPlease enter a valid selection')
+                sel = conn.recv(1024)
+
+            # Add a subscription
+            if sel == '1':
+                quit = False
+                msg = 'Please enter the username you would like to subscribe to:'
+                conn.sendall(msg)
+                sub_user = conn.recv(1024)
+                while sub_user not in userpw and not quit:
+                    conn.send('\nPlease enter a valid username or \'0\' to exit: ')
+                    sub_user = conn.recv(1024)
+                    if sub_user == '0':
+                        quit = True
+                if quit:
+                    conn.send('\nReturning to main menu')
+                    continue
+
+                if sub_user in subs[username_in]:
+                    msg = '\nYou are already subscribed to ' + sub_user
+                    conn.send(msg)
+                else: 
+                    subs[username_in].append(sub_user)
+                    msg = '\nSuccessfully subscribed to ' + sub_user
+
+                # Print current subscriptions
+                msg += '\nYour current subscriptions: '
+                conn.send(msg)
+                for subbed in subs[username_in]:
+                    msg = '\n\t' + subbed
+                    conn.send(msg)
+
+            # Remove a subscription
+            elif sel == '2':
+                quit = False
+
+                # Print current subscriptions
+                msg += '\nYour current subscriptions: '
+                conn.send(msg)
+                for subbed in subs[username_in]:
+                    msg = '\n\t' + subbed
+                    conn.send(msg)
+
+                msg = 'Please enter the username you would like to unsubscribe from:'
+                conn.sendall(msg)
+                sub_user = conn.recv(1024)
+                while sub_user not in subs[username_in] and not quit:
+                    conn.send('\nPlease enter a valid username you are currently subscribed to or \'0\' to exit: ')
+                    sub_user = conn.recv(1024)
+                    if sub_user == '0':
+                        quit = True
+                if quit:
+                    conn.send('\nReturning to main menu')
+                    continue
+
+                subs[username_in].remove(sub_user)
+                msg = '\nSuccessfully unsubscribed to ' + sub_user
+
+            # Return to main menu
+            elif sel == '3':
+                conn.send('\nReturning to main menu')
+                continue
 
         elif data == '3':
             # Post a message
             # reply = data[len('!sendall'):]
-            msg = conn.recv(1024)
-            while len(msg) > 140:
-                print('Message must be 140 chars or less. Please try again: \n')
-                msg = conn.recv(1024)
-            msg += 'Message from ' + username_in + ': '
+            msg_out = '\nPlease enter a message of 140 chars or less'
+            conn.sendall(msg_out)
+            msg_in = conn.recv(1024)
+            while len(msg_in) > 140:
+                msg_out = '\nMessage must be 140 chars or less. Please try again: \n'
+                conn.sendall(msg_out)
+                msg_in = conn.recv(1024)
+            msg_out = '\nMessage from ' + username_in + ': ' + msg_in
             for c in clients:
-                c.sendall(msg)
+                if c != conn:
+                    c.sendall(msg_out)
+            msg_out = '\nMessage sent'
+            conn.sendall(msg_out)
 
         elif data == '4':
             msg = username_in + ' logging out...'
