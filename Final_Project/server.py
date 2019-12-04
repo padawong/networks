@@ -5,7 +5,7 @@ from thread import *
 userpw = {'user1': 'pw1', 'user2': 'pw2', 'user3': 'pw3'}
 # Key is user, value is users subscribed to
 subs = {'user1': [], 'user2': [], 'user3': []}
-tweets = {'user1': [], 'user2': [], 'user3': []}
+tweets = {'user1': {}, 'user2': {}, 'user3': {}}
 
 HOST = ''   # Symbolic name meaning all available interfaces
 # NOTE: Cannot have 2 sockets bound to the same port
@@ -137,7 +137,7 @@ def clientthread(conn):
                     continue
 
                 subs[username_in].remove(sub_user)
-                msg = '\nSuccessfully unsubscribed to ' + sub_user
+                msg = '\nSuccessfully unsubscribed from: ' + sub_user
 
             # Return to main menu
             elif sel == '3':
@@ -145,21 +145,49 @@ def clientthread(conn):
                 continue
 
         elif data == '3':
+            quit = False
             # Post a message
             # reply = data[len('!sendall'):]
             msg_out = '\nPlease enter a message of 140 chars or less'
             conn.sendall(msg_out)
-            msg_in = conn.recv(1024)
-            while len(msg_in) > 140:
+            tweet = conn.recv(1024)
+            while len(tweet) > 140:
                 msg_out = '\nMessage must be 140 chars or less. Please try again: \n'
                 conn.sendall(msg_out)
-                msg_in = conn.recv(1024)
+                tweet = conn.recv(1024)
+            tweets[username_in][tweet] = []
+            while not quit:
+                msg_out = '\nPlease enter hashtags prepended by \'#\' and separated by newlines, or press \'0\' to proceed:'
+                conn.sendall(msg_out)
+                hashtag = conn.recv(1024)
+                if hashtag == '0':
+                    msg_out = '\nProceeding..'
+                    quit = True
+                elif hashtag[0] != '#':
+                    hashtag = '\nPlease prepend the hashtag with \'#\' or enter \'0\' to proceed:'
+                    hashtag = conn.recv(1024)
+                else:
+                    tweets[username_in][tweet].append(hashtag)
+
+            """
             msg_out = '\nMessage from ' + username_in + ': ' + msg_in
             for c in clients:
                 if c != conn:
                     c.sendall(msg_out)
-            msg_out = '\nMessage sent'
+            """
+            msg_out = '\nTweet posted'
             conn.sendall(msg_out)
+
+            # TEST REMOVE
+            msg = '\nYour tweets: '
+            conn.sendall(msg)
+            n = 1
+            for tweet in tweets[username_in]:
+                msg = '\n' + str(n) + ') ' + tweet
+                for hashtags in tweets[username_in][tweet]:
+                    msg += ' ' + hashtags
+                conn.sendall(msg)
+                n += 1
 
         elif data == '4':
             msg = username_in + ' logging out...'
