@@ -14,8 +14,8 @@ except socket.error, msg:
 
 print 'Socket Created'
 
-host = 'www.google.com'
-port = 80
+host = ''
+port = 8888
 
 # Try to connect to server
 try:
@@ -23,7 +23,7 @@ try:
     remote_ip = socket.gethostbyname( host )
 except socket.gaierror:
     # could not resolve
-    print 'Hostname could nto be resolved. Exiting'
+    print 'Hostname could not be resolved. Exiting'
     sys.exit()
 
 # We have the IP addr of the remote host/system
@@ -34,23 +34,27 @@ s.connect((remote_ip, port))
 
 print 'Socket Connected to ' + host + ' on ip ' + remote_ip
 
+# Maintain connection with server
+# Maintain connection with server
+# while 1:
 #Send some data to remote server
-message = "GET / HTTP/1.1\r\n\r\n"
+while 1:
+    # Now receive data on the socket
+    reply = s.recv(4096)
+    print reply
 
-try:
-    # Set the whole string
-    s.sendall(message)
-except socket.error:
-    # Send failed
-    print 'Send failed'
-    sys.exit()
+    message = raw_input()
 
-print 'Message send successfully'
+    try:
+        # Set the whole string
+        s.sendall(message)
+    except socket.error:
+        # Send failed
+        print 'Send failed'
+        sys.exit()
 
-# Now receive data on the socket
-reply = s.recv(4096)
-
-print reply
+    if message == '4':
+        break
 
 # Close the socket
 s.close()

@@ -2,6 +2,8 @@ import socket
 import sys
 from thread import *
 
+userpw = {'user1': 'pw1', 'user2': 'pw2', 'user3': 'pw3'}
+
 HOST = ''   # Symbolic name meaning all available interfaces
 # NOTE: Cannot have 2 sockets bound to the same port
 PORT = 8888 # Arbitrary non-privileged port
@@ -27,30 +29,72 @@ clients = set()
 
 # Function for handling connections. This will be used to create threads
 def clientthread(conn):
+    username_in = ""
     #sending message to connected client
-    conn.send('Welcome to the server. Type something and hit enter\n') #send only takes string
+    conn.send('\nWelcome to the CS164 Twitter Knockoff!\nPlease enter your username: ') #send only takes string
+    username_in = conn.recv(1024)
+    while username_in not in userpw:
+        conn.send('\nPlease enter a valid username: ')
+        username_in = conn.recv(1024)
+
+    conn.send('\nPlease enter your password: ')
+    password_in = conn.recv(1024)
+    while password_in != userpw[username_in]:
+        conn.send('\nPassword not accepted. Please try again: ')
+        password_in = conn.recv(1024)
+
+    conn.send('\nLogin successful. Welcome back!\n')
+
+    unread = 0
+    msg = 'You have ' + str(unread) + ' unread messages\n'
+    conn.sendall(msg)
 
     #infinite loop so that function do not terminate and thread do not end.
     while True:
-       #Receiving from client
-       msg = '# loop begin\n'
-       # conn.sendall(msg)
+        msg = 'Please select an option: \n'
+        msg += '1) See offline messages\n'
+        msg += '2) Edit subscriptions\n'
+        msg += '3) Post a message\n'
+        msg += '4) Logout\n'
+        msg += '5) Hashtag search\n'
+        conn.sendall(msg)
 
-       data = conn.recv(1024)
-       if not data or data.startswith('!q'):
-           msg = '# exiting...'
-           conn.sendall(msg)
-           break
-       if data.startswith('!sendall'):
-           reply = data[len('!sendall'):]
-           for c in clients:
-               c.sendall(reply)
-       else:
-           reply = 'OK...' + data
-           conn.sendall(reply)
+        data = conn.recv(1024)
+
+        if data == '1':
+            # See offline messages
+            msg = "See offline messages"
+
+        elif data == '2': 
+            # Edit subscriptions
+            msg = "edit sub"
+
+        elif data == '3':
+            # Post a message
+            # reply = data[len('!sendall'):]
+            msg = conn.recv(1024)
+            while len(msg) > 140:
+                print('Message must be 140 chars or less. Please try again: \n')
+                msg = conn.recv(1024)
+            msg += 'Message from ' + username_in + ': '
+            for c in clients:
+                c.sendall(msg)
+
+        elif data == '4':
+            msg = username_in + ' logging out...'
+            conn.sendall(msg)
+            break
+
+        elif data == '5':
+            # Hashtag search
+            msg = "hashtag search"
+
+        else:
+            reply = 'Please enter a valid menu item'
+            conn.sendall(reply)
        
     #came out of loop
-    conn.sendall('# removing & closing')
+    conn.sendall('\nSuccessfully logged out.')
     clients.remove(conn)
     conn.close()
 
