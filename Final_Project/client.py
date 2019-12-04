@@ -3,6 +3,7 @@
 
 import socket   #for sockets
 import sys      #for exit
+from thread import *
 
 try:
     #create an AF_INET(IPv4), STREAM socket(TCP) (SOCK_DGRAM is UDP)
@@ -34,14 +35,27 @@ s.connect((remote_ip, port))
 
 print 'Socket Connected to ' + host + ' on ip ' + remote_ip
 
+def listen(s):
+    msg_in = ""
+    while 'logging out...' not in msg_in:
+        msg_in = s.recv(1024)
+        print msg_in
+    print 'Please press ENTER to confirm exit'
+    s.close()
+    sys.exit()
+
+start_new_thread(listen,(s,))
+
 # Maintain connection with server
-# Maintain connection with server
-# while 1:
 #Send some data to remote server
 while 1:
+    """
     # Now receive data on the socket
     reply = s.recv(4096)
     print reply
+    if 'Successfully logged out.' in reply:
+        break
+    """
 
     message = raw_input()
 
@@ -50,11 +64,9 @@ while 1:
         s.sendall(message)
     except socket.error:
         # Send failed
-        print 'Send failed'
+        print 'Goodbye!'
         sys.exit()
-
-    if message == '4':
-        break
 
 # Close the socket
 s.close()
+sys.exit()
