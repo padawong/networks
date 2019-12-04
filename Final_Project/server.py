@@ -1,7 +1,7 @@
 import socket
 import sys
 from thread import *
-from datetime import datetime
+# from datetime import datetime
 
 userpw = {'user1': 'pw1', 'user2': 'pw2', 'user3': 'pw3'}
 # Key is user, value is users subscribed to
@@ -58,18 +58,18 @@ def clientthread(conn):
     for user in offline[current_user]:
         for tweet in offline[current_user][user]:
             unread += 1
-    msg = '\nYou have ' + str(unread) + ' unread messages'
+    msg = '\nYou have ' + str(unread) + ' unread messages\n'
     conn.sendall(msg)
 
     #infinite loop so that function do not terminate and thread do not end.
     while True:
-        conn.sendall('\n\nCurrent time: ' + str(datetime.now()))
-        msg = '\n\nPlease select an option: \n'
+        # conn.sendall('\n\nCurrent time: ' + str(datetime.now()))
+        msg = '\nPlease select an option: \n'
         msg += '1) See offline messages\n'
         msg += '2) Edit subscriptions\n'
         msg += '3) Post a message\n'
         msg += '4) Logout\n'
-        msg += '5) Hashtag search\n'
+        msg += '5) Hashtag search'
         conn.sendall(msg)
 
         data = conn.recv(1024)
@@ -79,10 +79,15 @@ def clientthread(conn):
 
         # See offline messages
         if data == '1':
-            msg = "Offline Messages Menu\nPlease select an option:\n"
+            # If no unread messages, don't show the menu
+            if unread == 0:
+                conn.sendall('\nYou have no pending offline messages\n')
+                continue
+
+            msg = "\nOffline Messages Menu\nPlease select an option:\n"
             msg += '1) See all messages'
             msg += '\n2) See messages from specific user'
-            msg += '\n3) Return to main menu\n'
+            msg += '\n3) Return to main menu'
             conn.sendall(msg)
             sel = conn.recv(1024)
             while sel != '1' and sel != '2' and sel != '3':
@@ -99,8 +104,15 @@ def clientthread(conn):
             # View specific user's offline tweets
             elif sel == '2':
                 quit = False
-                msg = 'Please enter the username you would like to view offline tweets of:'
+                msg = '\nPlease enter the username you would like to view offline tweets of:'
                 conn.sendall(msg)
+                # Print current subscriptions
+                msg = '\nYour current subscriptions: '
+                conn.send(msg)
+                for subbed in subbed_to[current_user]:
+                    msg = '\n\t' + subbed
+                    conn.send(msg)
+
                 sub_user = conn.recv(1024)
                 while sub_user not in subbed_to[current_user] and not quit:
                     conn.send('\nPlease enter a valid username or \'0\' to exit: ')
@@ -108,23 +120,26 @@ def clientthread(conn):
                     if sub_user == '0':
                         quit = True
                 if quit:
-                    conn.send('\nReturning to main menu')
+                    #conn.send('\nReturning to main menu')
+                    continue
+                if sub_user not in offline[current_user]:
+                    conn.sendall('\nThis user has not posted new messages\n')
                     continue
                 for tweet in offline[current_user][sub_user]:
-                    msg = '\n@' + user + ': \"' + tweet + '\"'
+                    msg = '\n@' + sub_user + ': \"' + tweet + '\"'
                     conn.sendall(msg)
 
             # Return to main menu
             elif sel == '3':
-                conn.send('\nReturning to main menu')
+                #conn.send('\nReturning to main menu')
                 continue
 
         # Edit subscriptions
         elif data == '2': 
-            msg = "\n\nEdit Subscriptions Menu\nPlease select an option:\n"
+            msg = "\nEdit Subscriptions Menu\nPlease select an option:\n"
             msg += '1) Add a subscription\n'
             msg += '2) Drop a subscription\n'
-            msg += '3) Return to main menu\n'
+            msg += '3) Return to main menu'
             conn.sendall(msg)
             sel = conn.recv(1024)
             while sel != '1' and sel != '2' and sel != '3':
@@ -134,16 +149,16 @@ def clientthread(conn):
             # Add a subscription
             if sel == '1':
                 quit = False
-                msg = 'Please enter the username you would like to subscribe to:'
+                msg = '\nPlease enter the username you would like to subscribe to:'
                 conn.sendall(msg)
                 sub_user = conn.recv(1024)
-                while sub_user not in userpw and not quit:
+                while sub_user == current_user and sub_user not in userpw and not quit:
                     conn.send('\nPlease enter a valid username or \'0\' to exit: ')
                     sub_user = conn.recv(1024)
                     if sub_user == '0':
                         quit = True
                 if quit:
-                    conn.send('\nReturning to main menu')
+                    #conn.send('\nReturning to main menu')
                     continue
 
                 if sub_user in subbed_to[current_user]:
@@ -158,7 +173,7 @@ def clientthread(conn):
                 msg += '\nYour current subscriptions: '
                 conn.send(msg)
                 for subbed in subbed_to[current_user]:
-                    msg = '\n\t' + subbed
+                    msg = '\n\t' + subbed + '\n'
                     conn.send(msg)
 
             # Remove a subscription
@@ -181,7 +196,7 @@ def clientthread(conn):
                     if sub_user == '0':
                         quit = True
                 if quit:
-                    conn.send('\nReturning to main menu')
+                    #conn.send('\nReturning to main menu')
                     continue
 
                 subbed_to[current_user].remove(sub_user)
@@ -191,7 +206,7 @@ def clientthread(conn):
 
             # Return to main menu
             elif sel == '3':
-                conn.send('\nReturning to main menu')
+                #conn.send('\nReturning to main menu')
                 continue
 
         # Post a message
@@ -199,7 +214,7 @@ def clientthread(conn):
             quit = False
             # Post a message
             # reply = data[len('!sendall'):]
-            msg_out = '\nPlease enter a message of 140 chars or less'
+            msg_out = '\nPlease enter a message of 140 chars or less including hashtags'
             conn.sendall(msg_out)
             tweet = conn.recv(1024)
             while len(tweet) > 140:
@@ -209,9 +224,10 @@ def clientthread(conn):
                 if tweet == '0':
                     quit = True
             if quit:
-                conn.send('\nReturning to main menu')
+                #conn.send('\nReturning to main menu')
                 continue
-            tweets[current_user][tweet] = []
+            curr_tweet = []
+            # tweets[current_user][tweet] = []
             while not quit:
                 msg_out = '\nPlease enter hashtags prepended by \'#\' and separated by newlines, or press \'0\' to proceed:'
                 conn.sendall(msg_out)
@@ -224,10 +240,15 @@ def clientthread(conn):
                     msg_out = '\nPlease prepend the hashtag with \'#\' or enter \'0\' to proceed:'
                     conn.sendall(msg_out)
                     hashtag = conn.recv(1024)
-                    tweets[current_user][tweet].append(hashtag)
+                    # tweets[current_user][tweet].append(hashtag)
+                    curr_tweet.append(hashtag)
                 else:
-                    tweets[current_user][tweet].append(hashtag)
+                    # tweets[current_user][tweet].append(hashtag)
+                    curr_tweet.append(hashtag)
 
+            tweets[current_user][tweet] = curr_tweet
+
+            # Push tweet to subscribers
             for user in sockets:
                 if user != conn and user in subbed_by[current_user]:
                     if sockets[user] != '':
@@ -256,10 +277,11 @@ def clientthread(conn):
             msg = '\nYour tweets: '
             conn.sendall(msg)
             for tweet in tweets[current_user]:
-                msg = '\n* ' + tweet
+                msg = '\n\t' + tweet
                 for hashtags in tweets[current_user][tweet]:
                     msg += ' ' + hashtags
                 conn.sendall(msg)
+            conn.sendall('\n')
 
         elif data == '4':
             # msg = current_user + ' logging out...'
@@ -281,7 +303,7 @@ def clientthread(conn):
                 if hashtag_in == '0':
                     quit = True
             if quit:
-                conn.send('\nReturning to main menu')
+                #conn.send('\nReturning to main menu')
                 continue
             n = 1
             for user in tweets:
