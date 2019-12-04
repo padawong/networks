@@ -42,6 +42,8 @@ while 1:
     # Now receive data on the socket
     reply = s.recv(4096)
     print reply
+    if 'Successfully logged out.' in reply:
+        break
 
     message = raw_input()
 
@@ -52,9 +54,6 @@ while 1:
         # Send failed
         print 'Send failed'
         sys.exit()
-
-    if message == '4':
-        break
 
 # Close the socket
 s.close()
