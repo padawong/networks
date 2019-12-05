@@ -286,7 +286,7 @@ def clientthread(conn):
             msg = '\nYour tweets: '
             conn.sendall(msg)
             for msgs in tweets[current_user]:
-                conn.sendall('time = ' + str(curr_time))
+                # conn.sendall('time = ' + str(curr_time))
                 # conn.sendall('\ntweet = ' + tweet)
                 # conn.sendall('\nmsgs[0] = ' + msgs[0] + '\nmsgs[1] = ' + str(msgs[1]))
                 # conn.sendall('\ntweets[current_user][(tweet, curr_time)][0] = ' + tweets[current_user][(tweet, curr_time)][0])
@@ -343,7 +343,7 @@ def clientthread(conn):
                             #n += 1
             matches.sort(key = sortTime, reverse=True)
             if len(matches) == 0:
-                conn.sendall('No tweets containing ' + hashtag_in + ' found.\n')
+                conn.sendall('\nNo tweets containing ' + hashtag_in + ' found.')
             else:
                 n = 1
                 for match in matches:
@@ -362,6 +362,7 @@ def clientthread(conn):
                     msg += '\"'
                     conn.sendall(msg)
                     n += 1
+            conn.sendall('\n')
                     
 
         else:
