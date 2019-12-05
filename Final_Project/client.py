@@ -3,6 +3,7 @@
 
 import socket   #for sockets
 import sys      #for exit
+from thread import *
 
 try:
     #create an AF_INET(IPv4), STREAM socket(TCP) (SOCK_DGRAM is UDP)
@@ -14,8 +15,8 @@ except socket.error, msg:
 
 print 'Socket Created'
 
-host = 'www.google.com'
-port = 80
+host = ''
+port = 8888
 
 # Try to connect to server
 try:
@@ -23,7 +24,7 @@ try:
     remote_ip = socket.gethostbyname( host )
 except socket.gaierror:
     # could not resolve
-    print 'Hostname could nto be resolved. Exiting'
+    print 'Hostname could not be resolved. Exiting'
     sys.exit()
 
 # We have the IP addr of the remote host/system
@@ -34,23 +35,38 @@ s.connect((remote_ip, port))
 
 print 'Socket Connected to ' + host + ' on ip ' + remote_ip
 
-#Send some data to remote server
-message = "GET / HTTP/1.1\r\n\r\n"
-
-try:
-    # Set the whole string
-    s.sendall(message)
-except socket.error:
-    # Send failed
-    print 'Send failed'
+def listen(s):
+    msg_in = ""
+    while 'logging out...' not in msg_in:
+        msg_in = s.recv(1024)
+        print msg_in
+    print 'Please press ENTER to confirm exit'
+    s.close()
     sys.exit()
 
-print 'Message send successfully'
+start_new_thread(listen,(s,))
 
-# Now receive data on the socket
-reply = s.recv(4096)
+# Maintain connection with server
+#Send some data to remote server
+while 1:
+    """
+    # Now receive data on the socket
+    reply = s.recv(4096)
+    print reply
+    if 'Successfully logged out.' in reply:
+        break
+    """
 
-print reply
+    message = raw_input()
+
+    try:
+        # Set the whole string
+        s.sendall(message)
+    except socket.error:
+        # Send failed
+        print 'Goodbye!'
+        sys.exit()
 
 # Close the socket
 s.close()
+sys.exit()
