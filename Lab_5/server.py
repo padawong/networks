@@ -7,19 +7,19 @@ PORT = 8888
 # Datagram (udp) socket
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    print 'Socket created'
+    print('Socket created')
 except socket.error, msg :
-    print 'Failed to create socket. Error Code : ' + str(msg[0]) + 'Message ' + msg[1]
+    print('Failed to create socket. Error Code : ' + str(msg[0]) + 'Message ' + msg[1])
     sys.exit()
 
 # Bind socket to local host and port
 try:
     s.bind((HOST, PORT))
 except socket.error , msg:
-    print 'Bind failed. Error Code: ' + str(msg[0]) + ' Message ' + msg[1]
+    print('Bind failed. Error Code: ' + str(msg[0]) + ' Message ' + msg[1])
     sys.exit()
 
-print 'Socket bind complete'
+print('Socket bind complete')
 
 # Now keep talking with the client
 while 1:
@@ -30,9 +30,20 @@ while 1:
     if not data:
         break
 
-    reply = 'OK...' + data
+
+    # Receive 3 packets where 2nd packet is corrupted
+    if data == 'packet 4':
+        reply = 
+    
+    # Receive 3 packets where 2nd packet times out (delay ack)
+    elif data == 'packet 7':
+
+    # Receive all other packets normally
+    else:
+        reply = 'ack ' + data
+    # reply = 'OK...' + data
 
     s.sendto(reply, addr)
-    print 'Message[' + addr[0] + ':' + str(addr[1]) + '] - ' + data.strip()
+    print('Message[' + addr[0] + ':' + str(addr[1]) + '] - ' + data.strip())
 
 s.close()
