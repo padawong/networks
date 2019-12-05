@@ -230,10 +230,16 @@ def clientthread(conn):
             if quit:
                 #conn.send('\nReturning to main menu')
                 continue
+
+            # Keep track of tweet + hashtags length
+            len_remaining = 140 - len(tweet)
             hashtags_in = []
             # tweets[current_user][tweet] = []
-            while not quit:
-                msg_out = '\nPlease enter hashtags prepended by \'#\' and separated by newlines, or press \'0\' to proceed:'
+            # Must have enough characters left for at least ' #' and one char
+            while not quit and len_remaining > 2:
+                msg_out = '\nPlease enter hashtags prepended by \'#\' and separated by newlines, or press \'0\' to proceed'
+                # Subtract the space to separate the hashtags
+                msg_out += '\nYou may enter ' + str(len_remaining - 1) + ' more characters including \'#\''
                 conn.sendall(msg_out)
                 hashtag = conn.recv(1024)
                 if hashtag == '0':
@@ -243,12 +249,20 @@ def clientthread(conn):
                 elif hashtag[0] != '#':
                     msg_out = '\nPlease prepend the hashtag with \'#\' or enter \'0\' to proceed:'
                     conn.sendall(msg_out)
-                    hashtag = conn.recv(1024)
                     # tweets[current_user][tweet].append(hashtag)
-                    hashtags_in.append(hashtag)
+                    # hashtag = conn.recv(1024)
+                    # hashtags_in.append(hashtag)
+                elif not hashtag[1:].isalnum():
+                    msg_out = '\nText following \'#\' must be alphanumeric only'
+                    conn.sendall(msg_out)
+                elif len(hashtag) > (len_remaining):
+                    msg_out = '\nToo many characters'
+                    conn.sendall(msg_out)
                 else:
                     # tweets[current_user][tweet].append(hashtag)
                     hashtags_in.append(hashtag)
+                    # Add the 1 char space that precedes each hashtag
+                    len_remaining -= (len(hashtag) + 1)
 
 
             # tweets dict key is user, value is dictionary where key is tuple of [tweet, timestamp] and value is list of hashtags
