@@ -234,10 +234,11 @@ def clientthread(conn):
             # Keep track of tweet + hashtags length
             len_remaining = 140 - len(tweet)
             hashtags_in = []
+            cancel = False
             # tweets[current_user][tweet] = []
             # Must have enough characters left for at least ' #' and one char
-            while not quit and len_remaining > 2:
-                msg_out = '\nPlease enter hashtags prepended by \'#\' and separated by newlines, or press \'0\' to proceed'
+            while not quit and not cancel and len_remaining > 2:
+                msg_out = '\nPlease enter hashtags prepended by \'#\' and separated by newlines, or enter \'0\' to post tweet, or enter \'q\' to cancel tweet'
                 # Subtract the space to separate the hashtags
                 msg_out += '\nYou may enter ' + str(len_remaining - 1) + ' more characters including \'#\''
                 conn.sendall(msg_out)
@@ -246,6 +247,10 @@ def clientthread(conn):
                     msg_out = '\nProceeding..'
                     conn.sendall(msg_out)
                     quit = True
+                elif hashtag == 'q':
+                    msg_out = '\nCanceling tweet\n'
+                    conn.sendall(msg_out)
+                    cancel = True
                 elif hashtag[0] != '#':
                     msg_out = '\nPlease prepend the hashtag with \'#\' or enter \'0\' to proceed:'
                     conn.sendall(msg_out)
@@ -263,6 +268,8 @@ def clientthread(conn):
                     hashtags_in.append(hashtag)
                     # Add the 1 char space that precedes each hashtag
                     len_remaining -= (len(hashtag) + 1)
+            if cancel:
+                continue
 
 
             # tweets dict key is user, value is dictionary where key is tuple of [tweet, timestamp] and value is list of hashtags
