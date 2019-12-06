@@ -83,6 +83,8 @@ while 1:
         print('Receiver forcing timeout for: ' + data)
         time.sleep(3.1)
         timeout = True
+        reply = 'ack ' + data
+        prev_ack = reply
         """
         if not timer.isAlive():
             timer.start()
@@ -91,8 +93,9 @@ while 1:
         """
 
     # Duplicate packet received; resend ack
-    if data == prev and timeout:
+    elif data == prev and timeout:
         reply = prev_ack
+        #print('data == prev and timeout')
 
     else:
         reply = 'ack ' + data

@@ -82,6 +82,8 @@ while(n < 9):
             check_sum = ip_checksum(msg)
             msg += ';' + str(ord(check_sum[0]) + ord(check_sum[1]))
             s.sendto(msg, (host, port))
+        elif reply == 'ack packet ' + str(n - 1):
+            print('ack packet ' + str(n - 1) + ' received')
 
         # print('Server reply: ' + reply)
     
