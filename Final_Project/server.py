@@ -255,7 +255,7 @@ def clientthread(conn):
                 elif not hashtag[1:].isalnum():
                     msg_out = '\nText following \'#\' must be alphanumeric only'
                     conn.sendall(msg_out)
-                elif len(hashtag) > (len_remaining):
+                elif len(hashtag) > (len_remaining - 1):
                     msg_out = '\nToo many characters'
                     conn.sendall(msg_out)
                 else:
@@ -267,7 +267,6 @@ def clientthread(conn):
 
             # tweets dict key is user, value is dictionary where key is tuple of [tweet, timestamp] and value is list of hashtags
             curr_time = datetime.now()
-            conn.sendall('initial time = ' + str(curr_time))
             tweets[current_user][(tweet, curr_time)] = hashtags_in
 
             # Push tweet to subscribers
